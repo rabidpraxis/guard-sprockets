@@ -9,8 +9,8 @@ module Guard
     def initialize(watchers=[], options={})
       super
 
-      libs = options.delete(:require) || []
-      libs.each do |lib|
+      @libs = options.delete(:require) || []
+      @libs.each do |lib|
         require lib
       end
 
@@ -41,6 +41,7 @@ module Guard
        UI.info "Sprockets activated."
        UI.info "  - external asset paths = #{@asset_paths.inspect}" unless @asset_paths.empty?
        UI.info "  - destination path = #{@destination.inspect}"
+       UI.info "  - loaded libs = #{@libs.inspect}" if !@libs.empty?
        UI.info "Sprockets guard is ready and waiting for some file changes..."
 
        run_all
