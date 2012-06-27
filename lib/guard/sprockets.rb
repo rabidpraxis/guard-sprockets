@@ -9,6 +9,11 @@ module Guard
     def initialize(watchers=[], options={})
       super
 
+      libs = options.delete(:require) || []
+      libs.each do |lib|
+        require lib
+      end
+
       @sprockets = ::Sprockets::Environment.new
 
       @asset_paths = options.delete(:asset_paths) || []
