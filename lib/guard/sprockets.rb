@@ -16,6 +16,11 @@ module Guard
 
       @sprockets = ::Sprockets::Environment.new
 
+      # Unregister the DirectiveProcessor so nested assets wont be compiled
+      if options[:develop_mode]
+        @sprockets.unregister_preprocessor('application/javascript', ::Sprockets::DirectiveProcessor)
+      end
+
       @asset_paths = options.delete(:asset_paths) || []
       @asset_paths.each do |p|
         @sprockets.append_path p
@@ -42,6 +47,7 @@ module Guard
        UI.info "  - external asset paths = #{@asset_paths.inspect}" unless @asset_paths.empty?
        UI.info "  - destination path = #{@destination.inspect}"
        UI.info "  - loaded libs = #{@libs.inspect}" if !@libs.empty?
+       UI.info "  - Development Mode" if @opts[:develop_mode]
        UI.info "Sprockets guard is ready and waiting for some file changes..."
 
        run_all
@@ -67,6 +73,10 @@ module Guard
 
     private
 
+    def determine_extension(path)
+      path.gsub(/\.(coffee|hamlc)$/, '.js')
+    end
+
     def sprocketize(path)
       changed = Pathname.new(path)
 
@@ -74,6 +84,17 @@ module Guard
 
       output_basename = changed.basename.to_s
       output_basename.gsub!(/^(.*\.(?:js|css))\.[^.]+$/, '\1')
+
+      if @opts[:develop_mode]
+        output_base = path
+        # Clear out possible asset path's
+        @asset_paths.each do |b_path|
+          output_base = path.gsub(/^#{b_path}\//, '')
+        end
+
+        # Replace
+        output_basename = determine_extension(output_base)
+      end
 
       output_file = Pathname.new(File.join(@destination, output_basename))
 
